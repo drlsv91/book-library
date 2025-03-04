@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from typing import Annotated
 import jwt
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlmodel import Session

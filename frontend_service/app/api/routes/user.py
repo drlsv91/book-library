@@ -16,7 +16,6 @@ def register_user(session: SessionDep, user_in: UserEnroll) -> Any:
     """
     statement = select(User).where(User.email == user_in.email)
     user_exist = session.exec(statement).first()
-    print(user_exist)
     if user_exist:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
