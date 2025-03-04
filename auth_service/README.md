@@ -38,7 +38,7 @@ Before deploying it, make sure you change at least the values for:
 
 ## Port
 
-- **Port**: `9001`
+- **Port**: `9003`
 
 ---
 
