@@ -21,14 +21,14 @@ def login_access_token(
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
-    print(user)
+
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     user_data = UserPublic(**user.model_dump(mode="json"))
-    print(f"user_data=> {user_data}")
+
     return Token(
         access_token=security.create_access_token(
             user.id,
