@@ -1,5 +1,23 @@
 version: "3.8"
 services:
+  prestart_admin:
+    image: admin_service:latest
+    build:
+      context: ./admin_service
+    depends_on:
+      admin_db:
+        condition: service_healthy
+    command: bash scripts/prestart.sh
+    environment:
+      - POSTGRES_SERVER=admin_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PROJECT_NAME=Admin Service
+      - SECRET_KEY=supersecret<TOKEN>
+    restart: on-failure
+
   admin_service:
     build: ./admin_service
     ports:
@@ -14,9 +32,32 @@ services:
       - REDIS_PORT=6380
       - PROJECT_NAME=Admin Service
       - SECRET_KEY=supersecret<TOKEN>
+      - AUTH_URI=http://0.0.0.0:9003/api/v1/auth/login/access-token
     depends_on:
-      - admin_db
-      - redis
+      admin_db:
+        condition: service_healthy
+      prestart_admin:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+  prestart_frontend:
+    image: frontend_service:latest
+    build:
+      context: ./frontend_service
+    depends_on:
+      frontend_db:
+        condition: service_healthy
+    command: bash scripts/prestart.sh
+    environment:
+      - POSTGRES_SERVER=frontend_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_frontend
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PROJECT_NAME=Frontend Service
+      - SECRET_KEY=supersecret<TOKEN>
+    restart: on-failure
 
   frontend_service:
     build: ./frontend_service
@@ -32,9 +73,32 @@ services:
       - REDIS_PORT=6380
       - PROJECT_NAME=Frontend Service
       - SECRET_KEY=supersecret<TOKEN>
+      - AUTH_URI=http://0.0.0.0:9003/api/v1/auth/login/access-token
     depends_on:
-      - frontend_db
-      - redis
+      frontend_db:
+        condition: service_healthy
+      prestart_frontend:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+  prestart_auth:
+    image: auth_service:latest
+    build:
+      context: ./auth_service
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    command: bash scripts/prestart.sh
+    environment:
+      - POSTGRES_SERVER=auth_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_auth
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PROJECT_NAME=Auth Service
+      - SECRET_KEY=supersecret<TOKEN>
+    restart: on-failure
 
   auth_service:
     build: ./auth_service
@@ -51,8 +115,12 @@ services:
       - PROJECT_NAME=Auth Service
       - SECRET_KEY=supersecret<TOKEN>
     depends_on:
-      - auth_db
-      - redis
+      auth_db:
+        condition: service_healthy
+      prestart_auth:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
 
   admin_db:
     image: postgres:latest
@@ -64,6 +132,11 @@ services:
       - "5433:5432"
     volumes:
       - admin_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library_admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   frontend_db:
     image: postgres:latest
@@ -75,6 +148,12 @@ services:
       - "5434:5432"
     volumes:
       - frontend_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library_frontend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   auth_db:
     image: postgres:latest
     environment:
@@ -85,6 +164,11 @@ services:
       - "5435:5432"
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
