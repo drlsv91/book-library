@@ -40,7 +40,7 @@ class UserBase(SQLModel):
     first_name: str = Field(max_length=255)
     last_name: str = Field(max_length=255)
     email: EmailStr = Field(unique=True, index=True)
-    is_active: bool = True
+    is_active: bool = Field(default=True, nullable=True)
 
 
 class User(UserBase, table=True):
