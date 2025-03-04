@@ -54,7 +54,7 @@ def read_available_books(
     limit: int = 100,
 ) -> Any:
     """
-    Retrieve Books.
+    Retrieve only available Books.
     """
 
     count_statement = select(func.count()).select_from(Book)
@@ -111,7 +111,7 @@ def borrow_book(
 
 
 @router.get("/{book_id}", response_model=BookPublic)
-def delete_book(
+def read_book(
     *, session: SessionDep, current_user: CurrentUser, book_id: uuid.UUID
 ) -> Any:
     """
