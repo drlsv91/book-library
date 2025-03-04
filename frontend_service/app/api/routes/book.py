@@ -7,7 +7,7 @@ from app.models import (
     BorrowedBook,
 )
 from typing import Annotated
-from app.api.deps import SessionDep, CurrentUser
+from app.api.deps import SessionDep, CurrentUser, get_current_user
 from typing import Any
 import uuid
 from sqlmodel import select, func
@@ -15,7 +15,8 @@ from typing import List
 from datetime import datetime, timedelta
 from app.events import publish_event
 
-router = APIRouter(prefix="/books", tags=["Bool"])
+
+router = APIRouter(prefix="/books", tags=["Book"])
 
 
 @router.get("/", response_model=BooksPublic)
@@ -45,11 +46,12 @@ def read_books(
     return BooksPublic(data=books, count=count)
 
 
-@router.get("/availiable", response_model=BooksPublic)
+@router.get(
+    "/availiable", dependencies=[Depends(get_current_user)], response_model=BooksPublic
+)
 def read_available_books(
     *,
     session: SessionDep,
-    current_user: CurrentUser,
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
@@ -110,10 +112,10 @@ def borrow_book(
     return create_data
 
 
-@router.get("/{book_id}", response_model=BookPublic)
-def read_book(
-    *, session: SessionDep, current_user: CurrentUser, book_id: uuid.UUID
-) -> Any:
+@router.get(
+    "/{book_id}", dependencies=[Depends(get_current_user)], response_model=BookPublic
+)
+def read_book(*, session: SessionDep, book_id: uuid.UUID) -> Any:
     """
     Get a Book by ID
     """
