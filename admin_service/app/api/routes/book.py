@@ -7,7 +7,7 @@ import uuid
 from sqlmodel import select, func
 from app.events import publish_event
 
-router = APIRouter(prefix="/books", tags=["Bool"])
+router = APIRouter(prefix="/books", tags=["Book"])
 
 
 @router.post("/", response_model=BookPublic)
