@@ -7,7 +7,7 @@ from app.models import (
 )
 from app.api.deps import SessionDep, get_current_user
 from typing import Any
-from sqlmodel import select, func
+from sqlmodel import select, func, desc
 
 router = APIRouter(prefix="/users", tags=["User"])
 
@@ -20,7 +20,7 @@ def read_users(*, session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_statement = select(func.count()).select_from(User)
     count = session.exec(count_statement).one()
 
-    statement = select(User).offset(skip).limit(limit)
+    statement = select(User).order_by(desc(User.created_at)).offset(skip).limit(limit)
     users = session.exec(statement).all()
 
     return UsersPublic(data=users, count=count)
@@ -38,7 +38,12 @@ def read_books(*, session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_statement = select(func.count()).select_from(BorrowedBook)
     count = session.exec(count_statement).one()
 
-    statement = select(BorrowedBook).offset(skip).limit(limit)
+    statement = (
+        select(BorrowedBook)
+        .order_by(desc(BorrowedBook.borrow_date))
+        .offset(skip)
+        .limit(limit)
+    )
     books = session.exec(statement).all()
 
     return BorrowedBooksPublic(data=books, count=count)

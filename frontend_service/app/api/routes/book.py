@@ -6,11 +6,10 @@ from app.models import (
     BorrowedBookCreate,
     BorrowedBook,
 )
-from typing import Annotated
 from app.api.deps import SessionDep, CurrentUser, get_current_user
 from typing import Any
 import uuid
-from sqlmodel import select, func
+from sqlmodel import select, func, desc
 from typing import List
 from datetime import datetime, timedelta
 from app.events import publish_event
@@ -19,11 +18,10 @@ from app.events import publish_event
 router = APIRouter(prefix="/books", tags=["Book"])
 
 
-@router.get("/", response_model=BooksPublic)
+@router.get("/", dependencies=[Depends(get_current_user)], response_model=BooksPublic)
 def read_books(
     *,
     session: SessionDep,
-    current_user: CurrentUser,
     category: str | None = None,
     publisher: str | None = None,
     skip: int = 0,
@@ -41,7 +39,7 @@ def read_books(
     if publisher is not None:
         query = query.where(Book.author == publisher)
 
-    statement = query.offset(skip).limit(limit)
+    statement = query.order_by(desc(Book.created_at)).offset(skip).limit(limit)
     books = session.exec(statement).all()
     return BooksPublic(data=books, count=count)
 
@@ -63,23 +61,24 @@ def read_available_books(
     count = session.exec(count_statement).one()
 
     query = select(Book).where(Book.is_available == True)
-    statement = query.offset(skip).limit(limit)
+    statement = query.order_by(desc(Book.created_at)).offset(skip).limit(limit)
     books = session.exec(statement).all()
 
     return BooksPublic(data=books, count=count)
 
 
-@router.post("/borrow", response_model=BooksPublic)
+@router.post("/borrow", response_model=List[BorrowedBookCreate])
 def borrow_book(
     *,
     session: SessionDep,
     current_user: CurrentUser,
-    borrow_data: Annotated[List[BorrowedBookCreate], Depends()],
+    borrow_data: List[BorrowedBookCreate],
 ) -> Any:
     """
     Borrow Books.
     """
     create_data = []
+    print(f"borrow_data =>{borrow_data}")
     for data in borrow_data:
         return_date = datetime.now() + timedelta(days=data.period_in_days)
         statement = select(Book).where(Book.id == data.book_id)
@@ -89,6 +88,12 @@ def borrow_book(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Book({data.id}) not found",
             )
+        if not book.is_available:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Book({book.title}) is not available",
+            )
+
         db_borrowed_book = BorrowedBook.model_validate(
             data,
             update={
@@ -97,11 +102,15 @@ def borrow_book(
                 "book_id": book.id,
             },
         )
+
+        book.sqlmodel_update({"is_available": False, "available_date": return_date})
         create_data.append(db_borrowed_book)
 
     session.add_all(create_data)
     session.commit()
-    session.refresh(create_data)
+    for item in create_data:
+        session.refresh(item)
+
     publish_event(
         "frontend_events",
         {
