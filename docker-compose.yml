@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  admin_service:
+    build: ./admin_service
+    ports:
+      - "9003:9003"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db/library
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9003 --reload
+
+  frontend_service:
+    build: ./frontend_service
+    ports:
+      - "9002:9002"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db/library
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9002 --reload
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: library
+    ports:
+      - "5432:5432" #
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data: # Define a volume for PostgreSQL data persistence
+  redis_data: # Define a volume for Redis data persistence
