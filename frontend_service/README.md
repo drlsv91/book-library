@@ -9,10 +9,10 @@ The **Frontend Service** handles user interactions such as enrolling users, list
 
 ## Endpoints
 
-- `POST /books/`: add a new book.
 - `GET /books/`: Retrieve books.
-- `DELETE /books/{book_id}`: Retrieve book by ID.
-- `GET /users/`: Retrieve users.
+- `GET /books/availiable`: Retrieve only availiable books.
+- `POST /books/borrow`: Borrow books.
+- `GET /books/{book_id}`: Retrieve a book by id.
 - `GET /users/books`: Retrieve users' books.
 
 ---
