@@ -16,7 +16,6 @@ class BookBase(SQLModel):
     category: str = Field(index=True, max_length=255)
     published_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_available: bool = Field(default=False)
-    author_id: uuid.UUID
     add_by_id: uuid.UUID
     available_date: datetime | None = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -26,14 +25,16 @@ class BookBase(SQLModel):
 class Book(BookBase, table=True):
     __tablename__ = "books"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    borrowed_books: List["BorrowedBook"] = Relationship(back_populates="book")
+    borrowed_books: List["BorrowedBook"] = Relationship(
+        back_populates="book", cascade_delete=True
+    )
 
 
 class BookCreate(SQLModel):
     title: str
     author: str
+    category: str
     published_date: datetime
-    author_id: uuid.UUID
 
 
 class UserBase(SQLModel):
@@ -56,7 +57,10 @@ class UserPublic(UserBase):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
-class UserEnroll(UserBase):
+class UserEnroll(SQLModel):
+    first_name: str
+    last_name: str
+    email: str
     password: str
 
 
