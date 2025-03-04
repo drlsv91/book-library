@@ -1,9 +1,4 @@
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# Use the official Python 3.11 image as the base image
 FROM python:3.11
 
 # Prevents Python from writing pyc files.
@@ -13,7 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+# Set the working directory inside the container
 WORKDIR /app
+
+# Install uv (a fast Python package installer and resolver)
+RUN pip install --no-cache-dir uv
 
 # Place executables in the environment at the front of the path
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#using-the-environment
@@ -34,14 +33,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project
 
-
+# Set the Python path
 ENV PYTHONPATH=/app
 
-COPY ./scripts /app/scripts
-
-COPY ./pyproject.toml ./uv.lock ./alembic.ini /app/
-
-COPY ./app /app/app
+# Copy everything into the /app directory
+COPY . .
 
 # Sync the project
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
@@ -52,4 +48,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 EXPOSE 9003
 
 # Run the application.
-CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+CMD ["fastapi", "run", "--workers", "4", "app/main.py", "--port", "9003"]

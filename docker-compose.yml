@@ -3,65 +3,99 @@ services:
   admin_service:
     build: ./admin_service
     ports:
-      - "9003:9003"
+      - "9001:9001"
     environment:
-      - DATABASE_URL=postgresql://user:password@admin_db/library_admin
+      - POSTGRES_SERVER=admin_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_PORT=6380
+      - PROJECT_NAME=Admin Service
+      - SECRET_KEY=supersecret<TOKEN>
     depends_on:
       - admin_db
       - redis
-    volumes:
-      - ./admin_service/entrypoint.sh:/entrypoint.sh
-    entrypoint: ["/bin/sh", "/entrypoint.sh"]
-    command: uvicorn app.main:app --host 0.0.0.0 --port 9003 --reload
 
   frontend_service:
     build: ./frontend_service
     ports:
       - "9002:9002"
     environment:
-      - DATABASE_URL=postgresql://user:password@frontend_db/library_frontend
+      - POSTGRES_SERVER=frontend_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_frontend
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_PORT=6380
+      - PROJECT_NAME=Frontend Service
+      - SECRET_KEY=supersecret<TOKEN>
     depends_on:
       - frontend_db
       - redis
-    volumes:
-      - ./frontend_service/entrypoint.sh:/entrypoint.sh
-    entrypoint: ["/bin/sh", "/entrypoint.sh"]
-    command: uvicorn app.main:app --host 0.0.0.0 --port 9002 --reload
+
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "9003:9003"
+    environment:
+      - POSTGRES_SERVER=auth_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=library_auth
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
+      - PROJECT_NAME=Auth Service
+      - SECRET_KEY=supersecret<TOKEN>
+    depends_on:
+      - auth_db
+      - redis
 
   admin_db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: library_admin
     ports:
-      - "5433:5432" # Use a different port to avoid conflicts
+      - "5433:5432"
     volumes:
       - admin_postgres_data:/var/lib/postgresql/data
 
   frontend_db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: library_frontend
     ports:
-      - "5434:5432" # Use a different port to avoid conflicts
+      - "5434:5432"
     volumes:
       - frontend_postgres_data:/var/lib/postgresql/data
+  auth_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: library_auth
+    ports:
+      - "5435:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:latest
     ports:
-      - "6379:6379"
+      - "6380:6380"
+    command: redis-server --port 6380
     volumes:
       - redis_data:/data
 
 volumes:
   admin_postgres_data:
   frontend_postgres_data:
+  auth_postgres_data:
   redis_data:
