@@ -1,10 +1,10 @@
 import redis
 import json
 from app.core.config import settings
-from sqlmodel import select
 from app.crud import get_user_by_email, create_user
-from app.api.deps import get_db
+from app.core.db import engine
 from app.models import UserCreate
+from sqlmodel import Session
 
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
@@ -24,9 +24,8 @@ def listen_for_events():
 
 
 def enroll_user(payload: dict):
-    session = next(get_db())
-    try:
 
+    with Session(engine) as session:
         user_exist = get_user_by_email(session=session, email=payload.get("email"))
         if user_exist:
             print(f"User with email {payload.get('email')} already enrolled.")
@@ -37,8 +36,3 @@ def enroll_user(payload: dict):
         user_create = create_user(session=session, user_create=create_payload)
         print(f"User with email {payload.get('email')} enrolled.")
         return user_create
-    except Exception as e:
-        print(f"Error: {e}")
-
-    finally:
-        session.close()
