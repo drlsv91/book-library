@@ -108,3 +108,17 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 The **Book Library Management System** is a scalable and modular application designed to manage books, users, and borrowing operations. It uses modern technologies like **FastAPI**, **PostgreSQL**, and **Redis** to ensure high performance and reliability. The system is containerized using **Docker** for easy deployment and scalability.
 
 This `README.md` file provides a comprehensive guide to setting up, running, and understanding the **Book Library Management System**. For more details, refer to the individual service `README.md` files.
+
+## Running Tests
+
+1. Set the `PYTHONPATH` environment variable:
+
+   ```bash
+   export PYTHONPATH=$(pwd)
+   ```
+
+2. Use `pytest-watch` to run the tests:
+
+   ```bash
+   pytest-watch
+   ```
