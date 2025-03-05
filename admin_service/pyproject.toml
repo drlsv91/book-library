@@ -6,13 +6,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.14.1",
+    "fakeredis>=2.27.0",
     "fastapi[standard]>=0.115.11",
     "passlib>=1.7.4",
     "psycopg[binary]>=3.2.5",
     "pydantic-settings>=2.8.1",
     "pyjwt>=2.10.1",
+    "pytest>=8.3.5",
+    "pytest-watch>=4.2.0",
     "redis>=5.2.1",
     "sqlmodel>=0.0.23",
     "starlette>=0.46.0",
-    "tenacity>=9.0.0",
+    "tenacity>=9.0.0"
 ]
