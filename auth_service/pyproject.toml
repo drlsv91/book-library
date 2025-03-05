@@ -15,5 +15,5 @@ dependencies = [
     "redis>=5.2.1",
     "sqlmodel>=0.0.23",
     "starlette>=0.46.0",
-    "tenacity>=9.0.0",
+    "tenacity>=9.0.0"
 ]
