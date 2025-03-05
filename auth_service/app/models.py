@@ -27,7 +27,7 @@ class UserPublic(UserBase):
 
 
 class UserCreate(UserBase):
-    id: uuid.UUID | None
+    id: uuid.UUID | None = uuid.uuid4()
     password: str
 
 
