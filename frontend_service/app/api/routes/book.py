@@ -78,7 +78,7 @@ def borrow_book(
     Borrow Books.
     """
     create_data = []
-    print(f"borrow_data =>{borrow_data}")
+
     for data in borrow_data:
         return_date = datetime.now() + timedelta(days=data.period_in_days)
         statement = select(Book).where(Book.id == data.book_id)
